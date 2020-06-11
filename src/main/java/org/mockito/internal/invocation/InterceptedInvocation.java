@@ -6,6 +6,7 @@ package org.mockito.internal.invocation;
 
 import static org.mockito.internal.exceptions.Reporter.cannotCallAbstractRealMethod;
 import static org.mockito.internal.invocation.ArgumentsProcessor.argumentsToMatchers;
+import static org.mockito.internal.invocation.ArgumentsProcessor.argumentsToMatchersWithNullType;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -14,6 +15,7 @@ import java.util.List;
 import org.mockito.ArgumentMatcher;
 import org.mockito.internal.exceptions.VerificationAwareInvocation;
 import org.mockito.internal.invocation.mockref.MockReference;
+import org.mockito.internal.matchers.ArgumentMatcherVerbose;
 import org.mockito.internal.reporting.PrintSettings;
 import org.mockito.invocation.Invocation;
 import org.mockito.invocation.Location;
@@ -174,7 +176,7 @@ public class InterceptedInvocation implements Invocation, VerificationAwareInvoc
     }
 
     public String toString() {
-        return new PrintSettings().print(getArgumentsAsMatchers(), this);
+        return new PrintSettings().print(argumentsToMatchersWithNullType(getMockitoMethod(), getArguments()), this);
     }
 
     public final static RealMethod NO_OP = new RealMethod() {

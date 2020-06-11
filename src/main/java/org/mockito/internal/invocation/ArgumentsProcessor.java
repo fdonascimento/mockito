@@ -4,13 +4,14 @@
  */
 package org.mockito.internal.invocation;
 
+import org.mockito.ArgumentMatcher;
+import org.mockito.internal.matchers.ArgumentMatcherVerbose;
+import org.mockito.internal.matchers.ArrayEquals;
+import org.mockito.internal.matchers.Equals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.mockito.ArgumentMatcher;
-import org.mockito.internal.matchers.ArrayEquals;
-import org.mockito.internal.matchers.Equals;
 
 /**
  * by Szczepan Faber, created at: 3/31/12
@@ -63,5 +64,37 @@ public class ArgumentsProcessor {
         return matchers;
     }
 
+    public static Object[] putVarArgsInsideAnArray(MockitoMethod method, Object[] args) {
+        if (method.isVarArgs()) {
+            int varArgsStartPosition = method.getParameterTypes().length-1;
+            Object[] varargs = Arrays.copyOfRange(args, varArgsStartPosition, args.length);
+            if (varargs.length == 1 && varargs[0] == null) {
+                return args;
+            }
+            Object[] newArray = Arrays.copyOfRange(args, 0, varArgsStartPosition+1);
+            newArray[varArgsStartPosition] = varargs;
+            return newArray;
+        }
+        return args;
+    }
 
+    public static List<ArgumentMatcher> argumentsToMatchersWithNullType(MockitoMethod method, Object[] arguments) {
+        Object[] argsWithVarArgsInArray = putVarArgsInsideAnArray(method, arguments);
+
+        List<ArgumentMatcher> matchers = new ArrayList<ArgumentMatcher>(argsWithVarArgsInArray.length);
+        for (int i = 0; i < argsWithVarArgsInArray.length; ++i) {
+            Object arg = argsWithVarArgsInArray[i];
+            ArgumentMatcher argumentMatcher;
+            if (arg != null && arg.getClass().isArray()) {
+                argumentMatcher = new ArrayEquals(arg);
+            } else {
+                argumentMatcher = new Equals(arg);
+            }
+            if (argumentMatcher.matches(null)) {
+                argumentMatcher = new ArgumentMatcherVerbose(method.getParameterTypes()[i], argumentMatcher);
+            }
+            matchers.add(argumentMatcher);
+        }
+        return matchers;
+    }
 }
